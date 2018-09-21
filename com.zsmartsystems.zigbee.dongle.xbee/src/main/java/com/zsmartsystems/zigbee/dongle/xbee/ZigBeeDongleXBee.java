@@ -418,7 +418,7 @@ public class ZigBeeDongleXBee implements ZigBeeTransportTransmit, XBeeEventListe
         int channel = response.getChannel();
         int count;
         
-        for(count = 0; (channel & 0x01) == 0 && count < (Integer.SIZE*8); channel >>= 1, count ++);
+        for(count = 0; (channel & 0x01) == 0 && count < Integer.SIZE; channel >>= 1, count ++);
         
         return ZigBeeChannel.create(count + 11);
     }
