@@ -54,6 +54,7 @@ import com.zsmartsystems.zigbee.dongle.telegesis.internal.protocol.TelegesisSetI
 import com.zsmartsystems.zigbee.dongle.telegesis.internal.protocol.TelegesisSetMainFunctionCommand;
 import com.zsmartsystems.zigbee.dongle.telegesis.internal.protocol.TelegesisSetNetworkKeyCommand;
 import com.zsmartsystems.zigbee.dongle.telegesis.internal.protocol.TelegesisSetOutputClustersCommand;
+import com.zsmartsystems.zigbee.dongle.telegesis.internal.protocol.TelegesisSetOutputPowerCommand;
 import com.zsmartsystems.zigbee.dongle.telegesis.internal.protocol.TelegesisSetPanIdCommand;
 import com.zsmartsystems.zigbee.dongle.telegesis.internal.protocol.TelegesisSetPromptEnable1Command;
 import com.zsmartsystems.zigbee.dongle.telegesis.internal.protocol.TelegesisSetPromptEnable2Command;
@@ -372,15 +373,6 @@ public class ZigBeeDongleTelegesis
             ieeeAddress = productInfo.getIeeeAddress();
         }
 
-        // Get network information
-        TelegesisDisplayNetworkInformationCommand networkInfo = new TelegesisDisplayNetworkInformationCommand();
-        if (frameHandler.sendRequest(networkInfo) == null || networkInfo.getStatus() != TelegesisStatusCode.SUCCESS) {
-            return ZigBeeStatus.BAD_RESPONSE;
-        }
-        if (networkInfo.getDevice() != TelegesisDeviceType.COO) {
-            return ZigBeeStatus.INVALID_STATE;
-        }
-
         zigbeeTransportReceive.setNetworkState(ZigBeeTransportState.INITIALISING);
 
         return ZigBeeStatus.SUCCESS;
@@ -406,11 +398,38 @@ public class ZigBeeDongleTelegesis
             }
         }
 
+        // Enable boost mode
+        TelegesisSetRegisterBitCommand setRegister = new TelegesisSetRegisterBitCommand();
+        setRegister.setRegister(0x11);
+        setRegister.setBit(0xE);
+        setRegister.setState(true);
+        if (frameHandler.sendRequest(setRegister) == null) {
+            logger.debug("Error setting Telegesis boost mode");
+            return ZigBeeStatus.BAD_RESPONSE;
+        }
+
+        // Set to maximum output power
+        TelegesisSetOutputPowerCommand outputPower = new TelegesisSetOutputPowerCommand();
+        if (versionString.contains("LRS")) {
+            // The output power of the “-LRS” variant is higher than the value in S01.
+            // The ETRX357-LRS power is reduced for EC regulatory compliance.
+            outputPower.setPowerLevel(-7);
+        } else {
+            outputPower.setPowerLevel(8);
+        }
+        if (frameHandler.sendRequest(outputPower) == null || outputPower.getStatus() != TelegesisStatusCode.SUCCESS) {
+            logger.debug("Telegesis failed to set maximum output power.");
+            return ZigBeeStatus.BAD_RESPONSE;
+        }
+
         // Check if the network is now up
         TelegesisDisplayNetworkInformationCommand networkInfo = new TelegesisDisplayNetworkInformationCommand();
         if (frameHandler.sendRequest(networkInfo) == null || networkInfo.getStatus() != TelegesisStatusCode.SUCCESS) {
             zigbeeTransportReceive.setNetworkState(ZigBeeTransportState.OFFLINE);
             return ZigBeeStatus.BAD_RESPONSE;
+        }
+        if (networkInfo.getDevice() != TelegesisDeviceType.COO) {
+            return ZigBeeStatus.INVALID_STATE;
         }
 
         radioChannel = ZigBeeChannel.create(networkInfo.getChannel());

@@ -340,11 +340,11 @@ public class ZigBeeDongleXBee implements ZigBeeTransportTransmit, XBeeEventListe
             command.setIeeeAddress(apsFrame.getDestinationIeeeAddress());
         }
 
-        //if (apsFrame.getDestinationAddress() < 0xFFF8 && apsFrame.getDestinationAddress() != 0) {
+        if (apsFrame.getSecurityEnabled()) {
             // There seems to be a bug in the XBee that causes it to hang if APS Encryption is
             // enabled when sending a command to the local coordinator. Don't do it!
-            //command.addOptions(TransmitOptions.ENABLE_APS_ENCRYPTION);
-        //}
+            command.addOptions(TransmitOptions.ENABLE_APS_ENCRYPTION);
+        }
 
         command.setData(apsFrame.getPayload());
 
@@ -414,13 +414,8 @@ public class ZigBeeDongleXBee implements ZigBeeTransportTransmit, XBeeEventListe
         }
         XBeeGetOperatingChannelCommand request = new XBeeGetOperatingChannelCommand();
         XBeeOperatingChannelResponse response = (XBeeOperatingChannelResponse) frameHandler.sendRequest(request);
-
-        int channel = response.getChannel();
-        int count;
         
-        for(count = 0; (channel & 0x01) == 0 && count < Integer.SIZE; channel >>= 1, count ++);
-        
-        return ZigBeeChannel.create(count + 11);
+        return ZigBeeChannel.create(response.getChannel());
     }
 
     @Override
