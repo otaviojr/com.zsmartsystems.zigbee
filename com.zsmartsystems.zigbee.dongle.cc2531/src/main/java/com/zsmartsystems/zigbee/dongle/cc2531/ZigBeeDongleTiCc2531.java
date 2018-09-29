@@ -7,8 +7,11 @@
  */
 package com.zsmartsystems.zigbee.dongle.cc2531;
 
+import java.util.ArrayList;
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.Collection;
+
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +25,6 @@ import com.zsmartsystems.zigbee.dongle.cc2531.frame.ZdoActiveEndpoint;
 import com.zsmartsystems.zigbee.dongle.cc2531.frame.ZdoCallbackIncoming;
 import com.zsmartsystems.zigbee.dongle.cc2531.frame.ZdoEndDeviceAnnounce;
 import com.zsmartsystems.zigbee.dongle.cc2531.frame.ZdoIeeeAddress;
-import com.zsmartsystems.zigbee.dongle.cc2531.frame.ZdoMatchDescRequest;
 import com.zsmartsystems.zigbee.dongle.cc2531.frame.ZdoManagementLeave;
 import com.zsmartsystems.zigbee.dongle.cc2531.frame.ZdoManagementLqi;
 import com.zsmartsystems.zigbee.dongle.cc2531.frame.ZdoManagementRouting;
@@ -83,6 +85,8 @@ public class ZigBeeDongleTiCc2531
     private final HashMap<Integer, Integer> sender2EndPoint = new HashMap<Integer, Integer>();
     private final HashMap<Integer, Integer> endpoint2Profile = new HashMap<Integer, Integer>();
 
+    private int[] supportedInputClusters = new int[] {};
+    private int[] supportedOutputClusters = new int[] {};
     /**
      * The IeeeAddress of the Ember NCP
      */
@@ -183,12 +187,23 @@ public class ZigBeeDongleTiCc2531
         return ZigBeeStatus.FAILURE;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void updateTransportConfig(TransportConfig configuration) {
         for (TransportConfigOption option : configuration.getOptions()) {
             try {
                 switch (option) {
-                    default:
+	                case SUPPORTED_INPUT_CLUSTERS:
+	                    configuration.setResult(option,
+	                            setSupportedInputClusters(new ArrayList<Integer>((Collection<Integer>) configuration.getValue(option))));
+	                    break;
+	
+	                case SUPPORTED_OUTPUT_CLUSTERS:
+	                    configuration.setResult(option,
+	                            setSupportedOutputClusters(new ArrayList<Integer>((Collection<Integer>) configuration.getValue(option))));
+	                    break;
+	
+	                default:
                         configuration.setResult(option, ZigBeeStatus.UNSUPPORTED);
                         logger.debug("Unsupported configuration option \"{}\" in Telegesis dongle", option);
                         break;
@@ -198,6 +213,23 @@ public class ZigBeeDongleTiCc2531
             }
         }
     }
+    
+    private ZigBeeStatus setSupportedInputClusters(ArrayList<Integer> supportedClusters) {
+    	this.supportedInputClusters = new int[supportedClusters.size()];
+    	for(int i = 0; i < supportedClusters.size(); i++) {
+    		this.supportedInputClusters[i] = supportedClusters.get(i);
+    	}
+        return ZigBeeStatus.SUCCESS;
+    }
+
+    private ZigBeeStatus setSupportedOutputClusters(ArrayList<Integer> supportedClusters) {
+    	this.supportedOutputClusters = new int[supportedClusters.size()];
+    	for(int i = 0; i < supportedClusters.size(); i++) {
+    		this.supportedOutputClusters[i] = supportedClusters.get(i);
+    	}
+        return ZigBeeStatus.SUCCESS;
+    }
+    
 
     @Override
     public ZigBeeStatus startup(boolean reinitialize) {
@@ -334,9 +366,6 @@ public class ZigBeeDongleTiCc2531
             case ZToolCMD.ZDO_IEEE_ADDR_RSP:
                 apsFrame = ZdoIeeeAddress.create(packet);
                 break;
-            case ZToolCMD.ZDO_MATCH_DESC_REQ:
-            	apsFrame = ZdoMatchDescRequest.create(packet);
-            	break;
             case ZToolCMD.ZDO_END_DEVICE_ANNCE_IND:
                 apsFrame = ZdoEndDeviceAnnounce.create(packet);
                 break;
@@ -424,7 +453,8 @@ public class ZigBeeDongleTiCc2531
 
         AF_REGISTER_SRSP result;
         result = networkManager.sendAFRegister(
-                new AF_REGISTER(endpointId, profileId, (short) 0, (byte) 0, new int[] {}, new int[] {}));
+                new AF_REGISTER(endpointId, profileId, (short) 0, (byte) 0, this.supportedInputClusters
+                		, this.supportedOutputClusters));
         // FIX We should retry only when Status != 0xb8 ( Z_APS_DUPLICATE_ENTRY )
         if (result.getStatus() != 0) {
             // TODO We should provide a workaround for the maximum number of registered EndPoint
