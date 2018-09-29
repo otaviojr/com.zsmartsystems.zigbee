@@ -53,6 +53,7 @@ public class ZDO_MSG_CB_INCOMING extends ZToolPacket /* implements IRESPONSE_CAL
     private static final Map<Integer, Class<? extends ZToolPacket>> clusterToRSP;
     static {
         final Map<Integer, Class<? extends ZToolPacket>> build = new HashMap<Integer, Class<? extends ZToolPacket>>();
+        build.put(0x0006, ZDO_MATCH_DESC_REQ.class);
         build.put(0x0013, ZDO_END_DEVICE_ANNCE_IND.class);
         build.put(0x8000, ZDO_NWK_ADDR_RSP.class);
         build.put(0x8001, ZDO_IEEE_ADDR_RSP.class);

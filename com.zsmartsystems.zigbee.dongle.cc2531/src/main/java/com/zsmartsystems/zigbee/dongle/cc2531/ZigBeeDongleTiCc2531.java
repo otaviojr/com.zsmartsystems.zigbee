@@ -22,6 +22,7 @@ import com.zsmartsystems.zigbee.dongle.cc2531.frame.ZdoActiveEndpoint;
 import com.zsmartsystems.zigbee.dongle.cc2531.frame.ZdoCallbackIncoming;
 import com.zsmartsystems.zigbee.dongle.cc2531.frame.ZdoEndDeviceAnnounce;
 import com.zsmartsystems.zigbee.dongle.cc2531.frame.ZdoIeeeAddress;
+import com.zsmartsystems.zigbee.dongle.cc2531.frame.ZdoMatchDescRequest;
 import com.zsmartsystems.zigbee.dongle.cc2531.frame.ZdoManagementLeave;
 import com.zsmartsystems.zigbee.dongle.cc2531.frame.ZdoManagementLqi;
 import com.zsmartsystems.zigbee.dongle.cc2531.frame.ZdoManagementRouting;
@@ -333,6 +334,9 @@ public class ZigBeeDongleTiCc2531
             case ZToolCMD.ZDO_IEEE_ADDR_RSP:
                 apsFrame = ZdoIeeeAddress.create(packet);
                 break;
+            case ZToolCMD.ZDO_MATCH_DESC_REQ:
+            	apsFrame = ZdoMatchDescRequest.create(packet);
+            	break;
             case ZToolCMD.ZDO_END_DEVICE_ANNCE_IND:
                 apsFrame = ZdoEndDeviceAnnounce.create(packet);
                 break;
