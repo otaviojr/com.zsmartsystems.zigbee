@@ -7,7 +7,9 @@
  */
 package com.zsmartsystems.zigbee.serialization;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.zsmartsystems.zigbee.ExtendedPanId;
@@ -82,13 +84,21 @@ public class DefaultDeserializer implements ZigBeeDeserializer {
                     value[0] = null;
                     break;
                 }
+                byte[] bytes = new byte[stringSize];
                 int length = stringSize;
                 for (int cnt = 0; cnt < stringSize; cnt++) {
+                    bytes[cnt] = (byte) payload[index + cnt];
                     if (payload[index + cnt] == 0) {
                         length = cnt;
+                        break;
                     }
                 }
-                value[0] = new String(payload, index, length);
+                try {
+                    value[0] = new String(Arrays.copyOfRange(bytes, 0, length), "UTF-8");
+                } catch (UnsupportedEncodingException e) {
+                    value[0] = null;
+                    break;
+                }
                 index += stringSize;
                 break;
             case ENDPOINT:
@@ -188,11 +198,19 @@ public class DefaultDeserializer implements ZigBeeDeserializer {
                     value[0] = Integer.valueOf(s & 0xFFFF);
                 }
                 break;
+            case UNSIGNED_24_BIT_INTEGER:
+                value[0] = payload[index++] + (payload[index++] << 8) + (payload[index++] << 16);
+                break;
             case BITMAP_32_BIT:
             case SIGNED_32_BIT_INTEGER:
             case UNSIGNED_32_BIT_INTEGER:
                 value[0] = payload[index++] + (payload[index++] << 8) + (payload[index++] << 16)
                         + (payload[index++] << 24);
+                break;
+            case UNSIGNED_48_BIT_INTEGER:
+                value[0] = (payload[index++]) + ((long) (payload[index++]) << 8) + ((long) (payload[index++]) << 16)
+                        + ((long) (payload[index++]) << 24) + ((long) (payload[index++]) << 32)
+                        + ((long) (payload[index++]) << 40);
                 break;
             case SIGNED_8_BIT_INTEGER:
                 value[0] = Integer.valueOf((byte) payload[index++]);

@@ -11,7 +11,10 @@ import java.util.ArrayList;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Collection;
+<<<<<<< HEAD
 
+=======
+>>>>>>> upstream/master
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -193,17 +196,17 @@ public class ZigBeeDongleTiCc2531
         for (TransportConfigOption option : configuration.getOptions()) {
             try {
                 switch (option) {
-	                case SUPPORTED_INPUT_CLUSTERS:
-	                    configuration.setResult(option,
-	                            setSupportedInputClusters(new ArrayList<Integer>((Collection<Integer>) configuration.getValue(option))));
-	                    break;
-	
-	                case SUPPORTED_OUTPUT_CLUSTERS:
-	                    configuration.setResult(option,
-	                            setSupportedOutputClusters(new ArrayList<Integer>((Collection<Integer>) configuration.getValue(option))));
-	                    break;
-	
-	                default:
+                    case SUPPORTED_INPUT_CLUSTERS:
+                        configuration.setResult(option, setSupportedInputClusters(
+                                new ArrayList<Integer>((Collection<Integer>) configuration.getValue(option))));
+                        break;
+
+                    case SUPPORTED_OUTPUT_CLUSTERS:
+                        configuration.setResult(option, setSupportedOutputClusters(
+                                new ArrayList<Integer>((Collection<Integer>) configuration.getValue(option))));
+                        break;
+
+                    default:
                         configuration.setResult(option, ZigBeeStatus.UNSUPPORTED);
                         logger.debug("Unsupported configuration option \"{}\" in Telegesis dongle", option);
                         break;
@@ -224,6 +227,16 @@ public class ZigBeeDongleTiCc2531
         return ZigBeeStatus.SUCCESS;
     }
     
+
+    private ZigBeeStatus setSupportedInputClusters(ArrayList<Integer> supportedClusters) {
+        supportedInputClusters = supportedClusters.stream().mapToInt(Integer::intValue).toArray();
+        return ZigBeeStatus.SUCCESS;
+    }
+
+    private ZigBeeStatus setSupportedOutputClusters(ArrayList<Integer> supportedClusters) {
+        supportedOutputClusters = supportedClusters.stream().mapToInt(Integer::intValue).toArray();
+        return ZigBeeStatus.SUCCESS;
+    }
 
     @Override
     public ZigBeeStatus startup(boolean reinitialize) {
