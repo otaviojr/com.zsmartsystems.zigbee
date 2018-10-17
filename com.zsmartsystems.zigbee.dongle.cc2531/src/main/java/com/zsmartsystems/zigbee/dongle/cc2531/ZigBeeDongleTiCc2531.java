@@ -11,10 +11,6 @@ import java.util.ArrayList;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Collection;
-<<<<<<< HEAD
-
-=======
->>>>>>> upstream/master
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -227,17 +223,6 @@ public class ZigBeeDongleTiCc2531
         return ZigBeeStatus.SUCCESS;
     }
     
-
-    private ZigBeeStatus setSupportedInputClusters(ArrayList<Integer> supportedClusters) {
-        supportedInputClusters = supportedClusters.stream().mapToInt(Integer::intValue).toArray();
-        return ZigBeeStatus.SUCCESS;
-    }
-
-    private ZigBeeStatus setSupportedOutputClusters(ArrayList<Integer> supportedClusters) {
-        supportedOutputClusters = supportedClusters.stream().mapToInt(Integer::intValue).toArray();
-        return ZigBeeStatus.SUCCESS;
-    }
-
     @Override
     public ZigBeeStatus startup(boolean reinitialize) {
         logger.debug("CC2531 transport startup");
